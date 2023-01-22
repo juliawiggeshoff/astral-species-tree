@@ -14,7 +14,7 @@ Follow [these](https://conda.io/projects/conda/en/latest/user-guide/install/linu
 	- After you are all set with conda, I highly (**highly!**) recommend installing a much much faster package manager to replace conda, [mamba](https://github.com/mamba-org/mamba)
 	- First activate your conda base
 	`conda activate base`
-	-Then, type:
+	- Then, type:
 	`conda install -n base -c conda-forge mamba` 
 
 - Likewise, follow [this](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) tutorial to install Git if you don't have it.
@@ -104,3 +104,83 @@ You will probably see something like this among your enviornments:
 From now own, you have to give this full path when activating the environment prior to running the workflow
 
 `conda activate /home/myusername/.conda/envs/localconda/envs/msc-species-tree`
+
+# Running the workflow
+
+Remember to always activate the environment first
+
+`conda activate msc-species-tree`
+
+or
+
+`conda activate /home/myusername/.conda/envs/localconda/envs/msc-species-tree`
+
+## Local machine
+
+**Not recommended** unless you have a lot of storage and CPUs available (and time to wait...). Nevertheless, you can simply run like this:
+
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 11 > nohup_msc-species-tree_$(date +"%F_%H").out &`
+
+Modify number of cores accordingly.
+
+## HPC system
+
+Two working options were tested to run the workflow in HPC clusters using the Sun Grid Engine (SGE) queue scheduler system.
+
+For other systems, read more [here](https://snakemake.readthedocs.io/en/stable/executing/cluster.html).
+
+### Before the first execution of the workflow
+
+Run this to create the environments from the rules:
+
+`snakemake --cores 8 --use-conda --conda-create-envs-only`
+
+### Option 1:
+
+`mkdir snakejob_logs`
+
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 61 --max-threads 15 --cluster "qsub -V -b y -j y -o snakejob_logs/ -cwd -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" > nohup_msc-species-tree_$(date +"%F_%H").out &`
+
+Remember to:
+1. Modify *user.email@gmail.com*
+2. Change values for --cores and --max-threads accordingly 
+
+### Option 2:
+
+A template jobscript `template_run_msc-species-tree.sh` is found under [`misc/`](https://gitlab.leibniz-lib.de/jwiggeshoff/msc-species-tree/-/tree/main/misc)
+
+
+**Important:** Please, modify the qsub options according to your system! 
+Features to modify:
+- E-mail address: `-M user.email@gmail.com`
+- Mailing settings, if needed: `-m be`
+- If you  want to split stderr to stdout, use `-j n` instead and add the line `#$ -e cluster_logs/`
+- If you want to, the name of the jobscript: `-N msc-species-tree`
+- **Name of parallel environment (PE) as well as the number of maximum threads to use:** `-pe smp 61`
+- **Queue name!** (extremely unique to your system): `-q small.q,medium.q,large.q`
+
+Ater modifying the template, copy it (while also modifying its name) to the working directory:
+
+If you are within the folder `misc/`:
+
+`cp template_run_msc-species-tree.sh ../run_msc-species-tree.sh`
+
+You should see `run_msc-species-tree.sh` within the path where the folders resources/, results/, and workflow/ are, together with files README.md and environment.yaml
+
+Remember to `mkdir cluster_logs` before running for the first time
+
+Finally, run:
+
+`qsub run_msc-species-tree.sh`
+
+# Finishing the workflow: report.zip
+
+Upon successfully finishing the analyses, Snakemake will **automatically** generate a compressed report in the working directory, `report.zip.` 
+
+It describes the used software versions, the commands, and paths to in and output files. 
+
+**To be released:** Summary of main results, drawn trees 
+
+To know more about report files, see the documentation from Snakemake [here](https://snakemake.readthedocs.io/en/stable/snakefiles/reporting.html).
+
+# Done :)
