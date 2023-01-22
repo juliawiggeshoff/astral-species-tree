@@ -1,0 +1,109 @@
+import os      
+
+## Infer the IDs from present files with glob_wildcards function ##
+## Subdirectory within folder resources contained the multiple sequence alignent files in fasta format, suffix .fas or .fasta
+## Name of subdir folder will be used to name the output directories and files from the workflow
+## The list assigned to the variable suffixes_ls will never be expanded, it is just for the glob_wildcards                                                                                      
+
+projects_ls, samples_ls, suffixes_ls = glob_wildcards("resources/{project}/{sample}.fa{sfx}")     
+
+
+def get_MSA_file(wildcards):
+    project = wildcards.project
+    sample = wildcards.sample
+    path_fas = "resources/" + str(project) + "/" + str(sample) + ".fas"
+    if os.path.exists(path_fas):
+        return "resources/{project}/{sample}.fas"
+    else:
+        return "resources/{project}/{sample}.fasta"
+
+rule all:
+    input:
+        expand("results/{project}/consensus_trees/flag/consensus_trees_{sample}_{project}.DONE", zip, sample=samples_ls, project=projects_ls),
+        expand("results/{project}/final_species_tree_{project}.treefile", project=list(set(projects_ls)))
+
+rule ml_bs_trees:
+    input:
+        MSA_file=get_MSA_file
+    output:
+        ML_tree="results/{project}/ml_bs_trees/{sample}_{project}.treefile",
+        bs_trees="results/{project}/ml_bs_trees/{sample}_{project}.boottrees"
+    params:
+        outdir="results/{project}/ml_bs_trees"
+    conda: 
+        "envs/env_iqtree.yaml"
+    threads: workflow.cores * 0.3  
+    log:
+        "results/{project}/logs/ml_bs_trees/ml_bs_trees_{sample}_{project}.log"
+    shell:
+        "(iqtree -s {input.MSA_file} -st AA -pre {params.outdir}/{wildcards.sample}_{wildcards.project} "
+        "-nt {threads} -m MFP -msub nuclear -mrate E,I,G,I+G,R -cmin 2 -cmax 15 -madd LG4X,LG4M -safe -merit AICc -b 100 --redo) &> {log}"
+
+checkpoint consensus_trees:
+    input:
+        ML_tree="results/{project}/ml_bs_trees/{sample}_{project}.treefile",
+        bs_trees="results/{project}/ml_bs_trees/{sample}_{project}.boottrees"
+    output:
+       suptree="results/{project}/consensus_trees/{sample}_{project}.suptree"
+    params:
+        outdir="results/{project}/consensus_trees"
+    conda: 
+        "envs/env_iqtree.yaml"
+    threads: workflow.cores * 0.2  
+    log:
+        "results/{project}/logs/consensus_trees/consensus_trees_{sample}_{project}.log"
+    shell:
+        "(iqtree -sup {input.ML_tree} -t {input.bs_trees} "
+        "-pre {params.outdir}/{wildcards.sample}_{wildcards.project} -nt {threads} --redo; "
+        "echo >> {output.suptree}) &> {log}"
+
+rule mk_flag:
+    input:
+        lambda wildcards: checkpoints.consensus_trees.get(**wildcards).output.suptree
+    output:
+        flag_file=touch("results/{project}/consensus_trees/flag/consensus_trees_{sample}_{project}.DONE")
+    shell:
+        "ls {input}; echo {output.flag_file}"
+
+projects_samples_dict = dict()
+for sample, project in zip(samples_ls, projects_ls):
+    if project not in projects_samples_dict:
+        projects_samples_dict[project] = []
+    projects_samples_dict[project].append(sample)
+
+rule concat_consensus_trees:
+    input:
+        flag_group_by_project=lambda wildcards: expand("results/{project}/consensus_trees/flag/consensus_trees_{sample}_{project}.DONE", sample=projects_samples_dict[wildcards.project], project=wildcards.project),
+        suptrees_group_by_project=lambda wildcards: expand("results/{project}/consensus_trees/{sample}_{project}.suptree", sample=projects_samples_dict[wildcards.project], project=wildcards.project)
+    output:
+        genetrees="results/{project}/gene_trees_{project}.trees"
+    params:
+        all_flags="all_consensus_trees_{project}.DONE"
+    log:
+        "results/{project}/logs/concat_consensus_trees_{project}.log"
+    shell:
+        "(cat {input.suptrees_group_by_project} > {output.genetrees}; "
+        "sed -i '/^$/d' {output.genetrees}; "
+        "echo {params.all_flags}) &> {log}"
+
+rule species_tree:
+    input:
+        genetrees="results/{project}/gene_trees_{project}.trees"
+    output: 
+        speciestree="results/{project}/final_species_tree_{project}.treefile"
+    conda:
+        "envs/env_astral.yaml"
+    log:
+        "results/{project}/logs/species_tree_{project}.log"
+    shell:
+        "(java -jar $CONDA_PREFIX/share/astral-tree-5.7.8-0/astral.5.7.8.jar -i {input.genetrees} -o {output.speciestree}) &> {log}"
+
+onsuccess:
+    print("Workflow finished, no error!")
+    print("Generating report...")
+    shell("snakemake --report report.html --configfile {workflow.configfiles}")
+    print("Done!")
+
+onerror:
+    print("An error occurred!")
+    print("See the log file for more details:")
