@@ -1,4 +1,4 @@
-# Multispecies Coalescent Model - Species Tree
+# Multi-species Coalescent Model Species Tree with ASTRAL
 
 In order to calculate phylogenetic trees, different methods can be used. [One method](https://gitlab.leibniz-lib.de/jwiggeshoff/ml-supermatrix-tree) concatenates multiple gene sequences into a single supermatrix alignment in order to calculate a species tree, while the other infers a tree for each gene, the so-called gene trees, to then create a consensus tree to represent the subject species. Among other things, incomplete lineage sorting may result in gene trees that are different from one another and from the species tree. Programs using the multi-species coalescent (MSC) model have been shown to be statistically consistent when facing these issues.
 
@@ -13,8 +13,10 @@ I recommend running the workflow on a HPC system, as the analyses are resource a
 Follow [these](https://conda.io/projects/conda/en/latest/user-guide/install/linux.html) instructions.
 	- After you are all set with conda, I highly (**highly!**) recommend installing a much much faster package manager to replace conda, [mamba](https://github.com/mamba-org/mamba)
 	- First activate your conda base
+
 	`conda activate base`
 	- Then, type:
+
 	`conda install -n base -c conda-forge mamba` 
 
 - Likewise, follow [this](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) tutorial to install Git if you don't have it.
@@ -38,7 +40,9 @@ If you run `conda env list` you'll probably see something like this:
 
 # Data requirements
 
-Multiple sequence alingment (MSA) files on the amino acid level. The files **need** to be in fasta format and have the suffix .fas or .fasta, otherwise it will not work.
+Multiple sequence alingment (MSA) files on the **amino acid level**. The files **need** to be in fasta format and have the suffix .fas or .fasta, otherwise it will not work.
+
+The workflow will be soon modified to work with difference sequence types and substitution models.
 
 Create a folder within `resources/` and add all of your MSA files to it. 
 
@@ -67,31 +71,31 @@ e.g.: `resources/mollusca_astral/`, `resources/arthropoda`, etc
 
 1. Clone this repository
 
-`git clone https://gitlab.leibniz-lib.de/jwiggeshoff/msc-species-tree.git`
+`git clone https://gitlab.leibniz-lib.de/jwiggeshoff/astral-species-tree.git`
 
 2. Activate your conda base
 
 `conda activate base`
 
-- If you are working on a cluster or have your own "local", isolated environment you want to activate instead (see [here](https://gitlab.leibniz-lib.de/jwiggeshoff/msc-species-tree#hpc-system)), use its name to activate it
+- If you are working on a cluster or have your own "local", isolated environment you want to activate instead (see [here](https://gitlab.leibniz-lib.de/jwiggeshoff/astral-species-tree#hpc-system)), use its name to activate it
 
 `conda activate localconda`
 
-3. Install **msc-species-tree** into an isolated software environment by navigating to the directory where this repo is and run:
+3. Install **astral-species-tree** into an isolated software environment by navigating to the directory where this repo is and run:
 
 `conda env create --file environment.yaml`
 
-If you followed what I recommended in the [System requirements](https://gitlab.leibniz-lib.de/jwiggeshoff/msc-species-tree#local-machine), run this instead:
+If you followed what I recommended in the [System requirements](https://gitlab.leibniz-lib.de/jwiggeshoff/astral-species-tree#local-machine), run this instead:
 
 `mamba env create --file environment.yaml`
 
-The environment from msc-species-tree is created
+The environment from astral-species-tree is created
 
 4. *Always* activate the environment before running the workflow
 
 On a local machine:
 
-`conda activate msc-species-tree`
+`conda activate astral-species-tree`
 
 If you are on a cluster and/or created the environment "within" another environment, you want to run this first:
 
@@ -99,27 +103,27 @@ If you are on a cluster and/or created the environment "within" another environm
 
 You will probably see something like this among your enviornments:
 
-`home/myusername/.conda/envs/localconda/envs/msc-species-tree`
+`home/myusername/.conda/envs/localconda/envs/astral-species-tree`
 
 From now own, you have to give this full path when activating the environment prior to running the workflow
 
-`conda activate /home/myusername/.conda/envs/localconda/envs/msc-species-tree`
+`conda activate /home/myusername/.conda/envs/localconda/envs/astral-species-tree`
 
 # Running the workflow
 
 Remember to always activate the environment first
 
-`conda activate msc-species-tree`
+`conda activate astral-species-tree`
 
 or
 
-`conda activate /home/myusername/.conda/envs/localconda/envs/msc-species-tree`
+`conda activate /home/myusername/.conda/envs/localconda/envs/astral-species-tree`
 
 ## Local machine
 
 **Not recommended** unless you have a lot of storage and CPUs available (and time to wait...). Nevertheless, you can simply run like this:
 
-`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 11 > nohup_msc-species-tree_$(date +"%F_%H").out &`
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 11 > nohup_astral-species-tree_$(date +"%F_%H").out &`
 
 Modify number of cores accordingly.
 
@@ -139,7 +143,7 @@ Run this to create the environments from the rules:
 
 `mkdir snakejob_logs`
 
-`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 61 --max-threads 15 --cluster "qsub -V -b y -j y -o snakejob_logs/ -cwd -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" > nohup_msc-species-tree_$(date +"%F_%H").out &`
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --cores 61 --max-threads 15 --cluster "qsub -V -b y -j y -o snakejob_logs/ -cwd -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" > nohup_astral-species-tree_$(date +"%F_%H").out &`
 
 Remember to:
 1. Modify *user.email@gmail.com*
@@ -147,7 +151,7 @@ Remember to:
 
 ### Option 2:
 
-A template jobscript `template_run_msc-species-tree.sh` is found under [`misc/`](https://gitlab.leibniz-lib.de/jwiggeshoff/msc-species-tree/-/tree/main/misc)
+A template jobscript `template_run_astral-species-tree.sh` is found under [`misc/`](https://gitlab.leibniz-lib.de/jwiggeshoff/astral-species-tree/-/tree/main/misc)
 
 
 **Important:** Please, modify the qsub options according to your system! 
@@ -155,7 +159,7 @@ Features to modify:
 - E-mail address: `-M user.email@gmail.com`
 - Mailing settings, if needed: `-m be`
 - If you  want to split stderr to stdout, use `-j n` instead and add the line `#$ -e cluster_logs/`
-- If you want to, the name of the jobscript: `-N msc-species-tree`
+- If you want to, the name of the jobscript: `-N astral-species-tree`
 - **Name of parallel environment (PE) as well as the number of maximum threads to use:** `-pe smp 61`
 - **Queue name!** (extremely unique to your system): `-q small.q,medium.q,large.q`
 
@@ -163,15 +167,15 @@ Ater modifying the template, copy it (while also modifying its name) to the work
 
 If you are within the folder `misc/`:
 
-`cp template_run_msc-species-tree.sh ../run_msc-species-tree.sh`
+`cp template_run_astral-species-tree.sh ../run_astral-species-tree.sh`
 
-You should see `run_msc-species-tree.sh` within the path where the folders resources/, results/, and workflow/ are, together with files README.md and environment.yaml
+You should see `run_astral-species-tree.sh` within the path where the folders resources/, results/, and workflow/ are, together with files README.md and environment.yaml
 
 Remember to `mkdir cluster_logs` before running for the first time
 
 Finally, run:
 
-`qsub run_msc-species-tree.sh`
+`qsub run_astral-species-tree.sh`
 
 # Finishing the workflow: report.zip
 
