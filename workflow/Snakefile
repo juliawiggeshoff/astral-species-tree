@@ -101,7 +101,7 @@ rule species_tree:
 onsuccess:
     print("Workflow finished, no error!")
     print("Generating report...")
-    shell("snakemake --report report.html --configfile {workflow.configfiles}")
+    shell("snakemake --report report.html")
     print("Done!")
 
 onerror:
