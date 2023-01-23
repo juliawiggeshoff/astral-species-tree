@@ -4,13 +4,13 @@
 #$ -j y
 #$ -o cluster_logs/
 #$ -q small.q,medium.q,large.q
-#$ -N msc-species-tree
+#$ -N astral-species-tree
 #$ -pe smp 61
 #$ -M user.email@gmail.com
 #$ -m be
 
 module load anaconda3/2022.05
-conda activate /home/myusername/.conda/envs/localconda/envs/msc-species-tree
+conda activate /home/myusername/.conda/envs/localconda/envs/astral-species-tree
 
 #one core will be used by snakemake to monitore the other processes
 THREADS=$(expr ${NSLOTS} - 1)
