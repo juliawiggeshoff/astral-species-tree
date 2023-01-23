@@ -177,9 +177,9 @@ Finally, run:
 
 `qsub run_astral-species-tree.sh`
 
-# Finishing the workflow: report.zip
+# Finishing the workflow: report.html
 
-Upon successfully finishing the analyses, Snakemake will **automatically** generate a compressed report in the working directory, `report.zip.` 
+Upon successfully finishing the analyses, Snakemake will **automatically** generate a compressed report in the working directory, `report.html` 
 
 It describes the used software versions, the commands, and paths to in and output files. 
 
