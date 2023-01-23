@@ -1,4 +1,4 @@
-name: msc-species-tree
+name: astral-species-tree
 channels:
   - bioconda
   - conda-forge
