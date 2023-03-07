@@ -143,11 +143,12 @@ Run this to create the environments from the rules:
 
 `mkdir snakejob_logs`
 
-`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --rerun-incomplete --cores 61 --max-threads 15 --cluster "qsub -V -b y -j y -o snakejob_logs/ -cwd -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" > nohup_astral-species-tree_$(date +"%F_%H").out &`
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --rerun-incomplete --cores 51 --max-threads 25  --cluster "qsub -terse -V -b y -j y -o snakejob_logs/ -cwd -pe smp {threads} -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" --cluster-cancel "qdel" > nohup_astral-species-tree_$(date +"%F_%H_%M_%S").out &`
 
 Remember to:
 1. Modify *user.email@gmail.com*
 2. Change values for --cores and --max-threads accordingly 
+3. Change environment for -pe as needed (e.g. smp)
 
 ### Option 2:
 
@@ -160,7 +161,7 @@ Features to modify:
 - Mailing settings, if needed: `-m be`
 - If you  want to split stderr to stdout, use `-j n` instead and add the line `#$ -e cluster_logs/`
 - If you want to, the name of the jobscript: `-N astral-species-tree`
-- **Name of parallel environment (PE) as well as the number of maximum threads to use:** `-pe smp 61`
+- **Name of parallel environment (e.g. smp) and number of threads (e.g. 61):** `-pe smp 61`
 - **Queue name!** (extremely unique to your system): `-q small.q,medium.q,large.q`
 
 Ater modifying the template, copy it (while also modifying its name) to the working directory:
