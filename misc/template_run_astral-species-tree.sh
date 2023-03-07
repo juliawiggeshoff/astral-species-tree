@@ -21,6 +21,7 @@ snakemake \
     --latency-wait 300 \
     --use-conda \
     --cores ${THREADS} \
+    --max-threads 25
     --verbose \
     --printshellcmds \
     --reason \
