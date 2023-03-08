@@ -143,7 +143,7 @@ Run this to create the environments from the rules:
 
 `mkdir snakejob_logs`
 
-`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --rerun-incomplete --cores 51 --max-threads 25  --cluster "qsub -terse -V -b y -j y -o snakejob_logs/ -cwd -pe smp {threads} -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" --cluster-cancel "qdel" > nohup_astral-species-tree_$(date +"%F_%H_%M_%S").out &`
+`nohup snakemake --keep-going --use-conda --verbose --printshellcmds --reason --nolock --rerun-incomplete --cores 51 --max-threads 25  --cluster "qsub -terse -V -b y -j y -o snakejob_logs/ -cwd -pe smp {threads} -q fast.q,small.q,medium.q,large.q -M user.email@gmail.com -m be" > nohup_astral-species-tree_$(date +"%F_%H_%M_%S").out &`
 
 Remember to:
 1. Modify *user.email@gmail.com*
